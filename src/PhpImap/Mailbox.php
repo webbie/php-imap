@@ -524,6 +524,14 @@ class Mailbox {
 			: (isset($params['filename']) || isset($params['name']) ? mt_rand() . mt_rand() : null);
 
 		if($attachmentId) {
+
+			// create mail dir for attachments
+			if (!is_dir($this->attachmentsDir . DIRECTORY_SEPARATOR . $mail->id)) {
+				if (!mkdir($this->attachmentsDir . DIRECTORY_SEPARATOR . $mail->id, 0700)) {
+					throw new Exception( 'Directory "' . $mail->id . '" cannot be created' );
+				}
+			}
+
 			if(empty($params['filename']) && empty($params['name'])) {
 				$fileName = $attachmentId . '.' . strtolower($partStructure->subtype);
 			}
@@ -543,8 +551,9 @@ class Mailbox {
 					'/_+/' => '_',
 					'/(^_)|(_$)/' => '',
 				);
-				$fileSysName = preg_replace('~[\\\\/]~', '', $mail->id . '_' . $attachmentId . '_' . preg_replace(array_keys($replace), $replace, $fileName));
-				$attachment->filePath = $this->attachmentsDir . DIRECTORY_SEPARATOR . $fileSysName;
+
+				$fileSysName = preg_replace('~[\\\\/]~', '', $attachmentId . '_' . preg_replace(array_keys($replace), $replace, $fileName));
+				$attachment->filePath = $this->attachmentsDir . DIRECTORY_SEPARATOR . $mail->id . DIRECTORY_SEPARATOR . $fileSysName;
 				file_put_contents($attachment->filePath, $data);
 			}
 			$mail->addAttachment($attachment);
